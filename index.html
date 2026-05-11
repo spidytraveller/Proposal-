@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BD Proposal Tracker — Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #171c26;
+    --surface2: #1e2535;
+    --surface3: #252d3d;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8eaf0;
+    --text2: #8b92a5;
+    --text3: #555e72;
+    --teal: #0fbcaf;
+    --teal2: #0a8c82;
+    --teal-dim: rgba(15,188,175,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --red: #f04a4a;
+    --red-dim: rgba(240,74,74,0.12);
+    --green: #3ecf8e;
+    --green-dim: rgba(62,207,142,0.12);
+    --blue: #4e9ef7;
+    --blue-dim: rgba(78,158,247,0.12);
+    --purple: #9b7ff4;
+    --purple-dim: rgba(155,127,244,0.12);
+    --header-h1: #1db8ac;
+    --header-h2: #1a8f86;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 40px;
+  }
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0d2e2b 0%, #0f1a2e 100%);
+    border-bottom: 1px solid var(--border2);
+    padding: 22px 32px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .header::before {
+    content:'';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(15,188,175,0.03) 48px,rgba(15,188,175,0.03) 49px);
+    pointer-events: none;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .header h1 .logo {
+    width: 28px; height: 28px;
+    background: var(--teal);
+    border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #0d2e2b; font-weight: 700;
+  }
+  .header .sub {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--teal);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+  /* ── KPI STRIP ── */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-bottom: 1px solid var(--border2);
+    background: var(--surface);
+  }
+  .kpi-card {
+    padding: 18px 20px 16px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .kpi-card:last-child { border-right: none; }
+  .kpi-card:hover { background: var(--surface2); }
+  .kpi-label { font-size: 11px; color: var(--text2); letter-spacing: .5px; text-transform: uppercase; margin-bottom: 8px; }
+  .kpi-value { font-size: 30px; font-weight: 700; font-family: 'DM Mono', monospace; line-height: 1; }
+  .kpi-value.blue  { color: var(--blue); }
+  .kpi-value.amber { color: var(--amber); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.teal  { color: var(--teal); }
+  .kpi-value.red   { color: var(--red); }
+  .kpi-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  /* ── PANEL ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 10px 16px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border2);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ph-blue   { background: #112240; color: var(--blue); }
+  .ph-teal   { background: #0b2220; color: var(--teal); }
+  .ph-amber  { background: #231a07; color: var(--amber); }
+  .ph-green  { background: #0d1f14; color: var(--green); }
+  .ph-purple { background: #180e2e; color: var(--purple); }
+  .ph-red    { background: #2a0e0e; color: var(--red); }
+  .panel-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor; flex-shrink: 0;
+  }
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .data-table thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border2);
+  }
+  .data-table thead th {
+    padding: 7px 12px;
+    text-align: right;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+  .data-table thead th:first-child { text-align: left; }
+  .data-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .data-table tbody tr:last-child { border-bottom: none; }
+  .data-table tbody tr:hover { background: var(--surface2); }
+  .data-table td {
+    padding: 8px 12px;
+    text-align: right;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+  }
+  .data-table td:first-child {
+    text-align: left;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--text);
+  }
+  /* Stage badges */
+  .stage-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .sb-follow  { background: rgba(245,166,35,0.15); color: #f5a623; }
+  .sb-new     { background: rgba(78,158,247,0.15); color: #4e9ef7; }
+  .sb-revised { background: rgba(15,188,175,0.15); color: #0fbcaf; }
+  .sb-nego    { background: rgba(240,74,74,0.15);  color: #f04a4a; }
+  /* RAG dots */
+  .rag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500;
+  }
+  .rag-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .rag-low  .rag-dot { background: var(--green); }
+  .rag-med  .rag-dot { background: var(--amber); }
+  .rag-high .rag-dot { background: var(--red); }
+  .rag-crit .rag-dot { background: #ff2222; box-shadow: 0 0 6px #ff222288; }
+  .rag-low  { color: var(--green); }
+  .rag-med  { color: var(--amber); }
+  .rag-high { color: var(--red); }
+  .rag-crit { color: #ff4444; }
+  /* Owner dots in BD table */
+  .dot-green { color: var(--green); }
+  .dot-red   { color: var(--red); }
+  /* ── FOOTER / last updated ── */
+  .footer {
+    text-align: center;
+    font-size: 10px;
+    color: var(--text3);
+    padding: 12px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .header h1 { font-size: 16px; }
+  }
+  /* Pulse animation for overdue */
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity: .5; }
+  }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+  /* Bar micro-chart */
+  .bar-wrap { display: flex; align-items: center; gap: 8px; }
+  .bar-bg {
+    flex: 1; height: 4px;
+    background: var(--surface3);
+    border-radius: 2px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<div class="header">
+  <h1>
+    <span class="logo">BD</span>
+    BD Proposal Tracker &mdash; Executive Dashboard
+  </h1>
+  <p class="sub">Formulas linked to Live Proposals sheet &bull; Auto-updates on data entry</p>
+</div>
+
+<!-- ═══════════════════════ KPI STRIP ═══════════════════════ -->
+<div class="kpi-strip">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Proposals</div>
+    <div class="kpi-value blue" id="kpi-total">5</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Total Pipeline (₹)</div>
+    <div class="kpi-value teal" id="kpi-pipeline">27,948,500</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><span class="kpi-dot" style="background:var(--red)"></span>Overdue / Nego</div>
+    <div class="kpi-value red pulse" id="kpi-overdue">1</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><span class="kpi-dot" style="background:var(--amber)"></span>Due ≤ 3 Days</div>
+    <div class="kpi-value amber" id="kpi-due3">4</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label"><span class="kpi-dot" style="background:var(--green)"></span>On Track</div>
+    <div class="kpi-value green" id="kpi-ontrack">0</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN GRID ═══════════════════════ -->
+<div class="main-grid">
+
+  <!-- ── Stage Breakdown ── -->
+  <div class="panel">
+    <div class="panel-header ph-blue"><span class="panel-dot"></span>Stage Breakdown — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Stage</th><th># Props</th><th>Pipeline (₹)</th><th>Avg Days</th><th>% Share</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-stage">
+        <tr>
+          <td><span class="stage-badge sb-follow">Follow Up</span></td>
+          <td>4</td><td>16,348,500</td><td>13.3</td>
+          <td>
+            <div class="bar-wrap">
+              <span>80.0%</span>
+              <div class="bar-bg"><div class="bar-fill" style="width:80%;background:var(--amber)"></div></div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="stage-badge sb-new">New</span></td>
+          <td>0</td><td>0</td><td>0.0</td>
+          <td><div class="bar-wrap"><span>0.0%</span><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--blue)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="stage-badge sb-revised">Revised</span></td>
+          <td>1</td><td>11,600,000</td><td>8.0</td>
+          <td><div class="bar-wrap"><span>20.0%</span><div class="bar-bg"><div class="bar-fill" style="width:20%;background:var(--teal)"></div></div></div></td>
+        </tr>
+        <tr>
+          <td><span class="stage-badge sb-nego">Negotiation</span></td>
+          <td>0</td><td>0</td><td>0.0</td>
+          <td><div class="bar-wrap"><span>0.0%</span><div class="bar-bg"><div class="bar-fill" style="width:0%;background:var(--red)"></div></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Proposal Type Split ── -->
+  <div class="panel">
+    <div class="panel-header ph-purple"><span class="panel-dot"></span>Proposal Type Split — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Type</th><th># Props</th><th>Pipeline (₹)</th><th>Avg Students</th><th>% Share</th></tr>
+      </thead>
+      <tbody id="tbl-type">
+        <tr><td>Pilot</td><td>0</td><td>0</td><td>0</td><td>0.0%</td></tr>
+        <tr><td>Dept Wise</td><td>0</td><td>0</td><td>0</td><td>0.0%</td></tr>
+        <tr><td style="color:var(--teal);font-weight:600">Campus Wise</td><td>5</td><td>27,948,500</td><td>2,375</td>
+          <td><div class="bar-wrap"><span>100.0%</span><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--teal)"></div></div></div></td>
+        </tr>
+        <tr><td>Enterprise</td><td>0</td><td>0</td><td>0</td><td>0.0%</td></tr>
+        <tr><td>Revised Commercial</td><td>0</td><td>0</td><td>0</td><td>0.0%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── BD Owner Pipeline ── -->
+  <div class="panel">
+    <div class="panel-header ph-teal"><span class="panel-dot"></span>BD Owner Pipeline — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>BD Owner</th><th># Props</th><th>Pipeline (₹)</th><th>In Nego</th>
+          <th><span style="color:var(--green)">●</span> Green</th>
+          <th><span style="color:var(--red)">●</span> Red</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-owner">
+        <tr><td>Nagveer Sir</td><td>2</td><td>11,500,000</td><td>0</td><td class="dot-green">0</td><td class="dot-red">0</td></tr>
+        <tr><td>Srini Sir</td><td>1</td><td>12,000,000</td><td>0</td><td class="dot-green">0</td><td class="dot-red">0</td></tr>
+        <tr><td>Prudhvi</td><td>2</td><td>4,349,500</td><td>0</td><td class="dot-green">0</td><td class="dot-red">1</td></tr>
+        <tr><td>Jay</td><td>0</td><td>0</td><td>0</td><td class="dot-green">0</td><td class="dot-red">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Days-wise RAG Aging ── -->
+  <div class="panel">
+    <div class="panel-header ph-red"><span class="panel-dot"></span>Days-wise RAG Aging — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Aging Bracket</th><th># Props</th><th>Avg Pipeline</th><th>Risk Level</th></tr>
+      </thead>
+      <tbody id="tbl-aging">
+        <tr>
+          <td>0–7 days</td><td>2</td><td>11,800,000</td>
+          <td><span class="rag rag-low"><span class="rag-dot"></span>Low</span></td>
+        </tr>
+        <tr>
+          <td>8–14 days</td><td>2</td><td>2,174,250</td>
+          <td><span class="rag rag-low"><span class="rag-dot"></span>Low</span></td>
+        </tr>
+        <tr>
+          <td>15–30 days</td><td>1</td><td>0</td>
+          <td><span class="rag rag-med"><span class="rag-dot"></span>Medium</span></td>
+        </tr>
+        <tr>
+          <td>31–60 days</td><td>0</td><td>0</td>
+          <td><span class="rag rag-high"><span class="rag-dot"></span>High</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--red);font-weight:600">60+ days</td><td>0</td><td>0</td>
+          <td><span class="rag rag-crit"><span class="rag-dot"></span>Critical</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Governor Oversight ── -->
+  <div class="panel">
+    <div class="panel-header ph-amber"><span class="panel-dot"></span>Governor Oversight — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Governor</th><th># Props</th><th>Pipeline (₹)</th>
+          <th><span style="color:var(--red)">●</span> Red</th>
+          <th><span style="color:var(--amber)">●</span> Amber</th>
+          <th><span style="color:var(--green)">●</span> Green</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-gov">
+        <tr><td>Nagveer Sir</td><td>1</td><td>12,000,000</td><td class="dot-red">0</td><td style="color:var(--amber)">1</td><td class="dot-green">0</td></tr>
+        <tr><td>Srini Sir</td><td>2</td><td>11,800,000</td><td class="dot-red">0</td><td style="color:var(--amber)">2</td><td class="dot-green">0</td></tr>
+        <tr><td>Prudhvi</td><td>2</td><td>4,348,500</td><td class="dot-red">1</td><td style="color:var(--amber)">0</td><td class="dot-green">0</td></tr>
+        <tr><td>Jay</td><td>0</td><td>0</td><td class="dot-red">0</td><td style="color:var(--amber)">0</td><td class="dot-green">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Vertical-wise Split ── -->
+  <div class="panel">
+    <div class="panel-header ph-green"><span class="panel-dot"></span>Vertical-wise Split — Formula Linked</div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Vertical</th><th># Props</th><th>Pipeline (₹)</th><th>Avg Students</th></tr>
+      </thead>
+      <tbody id="tbl-vertical">
+        <tr><td>Engineering</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Technology</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Management</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Arts</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td>Medical</td><td>0</td><td>0</td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="footer" id="last-updated">Last updated: —</div>
+
+<script>
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  n8n INTEGRATION POINT                                   ║
+  ║                                                          ║
+  ║  Option 1 — URL query string (GET):                      ║
+  ║    ?totalProposals=5&totalPipeline=27948500&...          ║
+  ║                                                          ║
+  ║  Option 2 — Inject a global before this script:         ║
+  ║    <script>window.DASHBOARD_DATA = {...};<\/script>      ║
+  ║                                                          ║
+  ║  Option 3 — POST from n8n HTTP Request node:            ║
+  ║    fetch() call inside the page to your n8n webhook     ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
+
+const fmt = n => Number(n).toLocaleString('en-IN');
+const fmtD = n => parseFloat(n).toFixed(1);
+const fmtPct = n => parseFloat(n).toFixed(1) + '%';
+
+function applyData(d) {
+  if (!d) return;
+
+  /* KPIs */
+  if (d.totalProposals  !== undefined) setEl('kpi-total',    fmt(d.totalProposals));
+  if (d.totalPipeline   !== undefined) setEl('kpi-pipeline', fmt(d.totalPipeline));
+  if (d.overdueNego     !== undefined) setEl('kpi-overdue',  fmt(d.overdueNego));
+  if (d.due3Days        !== undefined) setEl('kpi-due3',     fmt(d.due3Days));
+  if (d.onTrack         !== undefined) setEl('kpi-ontrack',  fmt(d.onTrack));
+
+  /* Stage Breakdown */
+  if (d.stages && Array.isArray(d.stages)) {
+    const map = { 'Follow Up':'sb-follow','New':'sb-new','Revised':'sb-revised','Negotiation':'sb-nego' };
+    const colors = { 'Follow Up':'var(--amber)','New':'var(--blue)','Revised':'var(--teal)','Negotiation':'var(--red)' };
+    const tbody = document.getElementById('tbl-stage');
+    tbody.innerHTML = d.stages.map(s => `
+      <tr>
+        <td><span class="stage-badge ${map[s.stage]||'sb-new'}">${s.stage}</span></td>
+        <td>${s.props}</td><td>${fmt(s.pipeline)}</td><td>${fmtD(s.avgDays)}</td>
+        <td><div class="bar-wrap"><span>${fmtPct(s.share)}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(100,s.share)}%;background:${colors[s.stage]||'var(--blue)'}"></div></div>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  /* Proposal Type */
+  if (d.types && Array.isArray(d.types)) {
+    const tbody = document.getElementById('tbl-type');
+    tbody.innerHTML = d.types.map(t => `
+      <tr>
+        <td style="${t.share>0?'color:var(--teal);font-weight:600':''}">${t.type}</td>
+        <td>${t.props}</td><td>${fmt(t.pipeline)}</td><td>${fmt(t.avgStudents)}</td>
+        <td><div class="bar-wrap"><span>${fmtPct(t.share)}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${Math.min(100,t.share)}%;background:var(--teal)"></div></div>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  /* BD Owner */
+  if (d.owners && Array.isArray(d.owners)) {
+    const tbody = document.getElementById('tbl-owner');
+    tbody.innerHTML = d.owners.map(o => `
+      <tr>
+        <td>${o.owner}</td><td>${o.props}</td><td>${fmt(o.pipeline)}</td><td>${o.inNego}</td>
+        <td class="dot-green">${o.green}</td><td class="dot-red">${o.red}</td>
+      </tr>`).join('');
+  }
+
+  /* RAG Aging */
+  if (d.aging && Array.isArray(d.aging)) {
+    const ragMap = { Low:'rag-low', Medium:'rag-med', High:'rag-high', Critical:'rag-crit' };
+    const tbody = document.getElementById('tbl-aging');
+    tbody.innerHTML = d.aging.map(a => `
+      <tr>
+        <td style="${a.risk==='Critical'?'color:var(--red);font-weight:600':''}">${a.bracket}</td>
+        <td>${a.props}</td><td>${fmt(a.avgPipeline)}</td>
+        <td><span class="rag ${ragMap[a.risk]||'rag-low'}"><span class="rag-dot"></span>${a.risk}</span></td>
+      </tr>`).join('');
+  }
+
+  /* Governor Oversight */
+  if (d.governors && Array.isArray(d.governors)) {
+    const tbody = document.getElementById('tbl-gov');
+    tbody.innerHTML = d.governors.map(g => `
+      <tr>
+        <td>${g.governor}</td><td>${g.props}</td><td>${fmt(g.pipeline)}</td>
+        <td class="dot-red">${g.red}</td>
+        <td style="color:var(--amber);font-family:'DM Mono',monospace;font-size:12px;text-align:right">${g.amber}</td>
+        <td class="dot-green">${g.green}</td>
+      </tr>`).join('');
+  }
+
+  /* Verticals */
+  if (d.verticals && Array.isArray(d.verticals)) {
+    const tbody = document.getElementById('tbl-vertical');
+    tbody.innerHTML = d.verticals.map(v => `
+      <tr><td>${v.vertical}</td><td>${v.props}</td><td>${fmt(v.pipeline)}</td><td>${fmt(v.avgStudents)}</td></tr>
+    `).join('');
+  }
+
+  /* Timestamp */
+  document.getElementById('last-updated').textContent =
+    'Last updated: ' + (d.lastUpdated || new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}));
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ── Priority 1: injected window.DASHBOARD_DATA ── */
+if (window.DASHBOARD_DATA) {
+  applyData(window.DASHBOARD_DATA);
+}
+
+/* ── Priority 2: URL query params ── */
+(function() {
+  const p = new URLSearchParams(window.location.search);
+  if (!p.has('totalProposals') && !p.has('data')) return;
+  if (p.has('data')) {
+    try { applyData(JSON.parse(decodeURIComponent(p.get('data')))); } catch(e) {}
+    return;
+  }
+  applyData({
+    totalProposals : p.get('totalProposals'),
+    totalPipeline  : p.get('totalPipeline'),
+    overdueNego    : p.get('overdueNego'),
+    due3Days       : p.get('due3Days'),
+    onTrack        : p.get('onTrack'),
+    lastUpdated    : p.get('lastUpdated')
+  });
+})();
+
+/*
+  ── n8n WEBHOOK EXAMPLE ──
+  In n8n, after your Google Sheets node, add an HTTP Request node
+  sending a POST to your dashboard's hosting URL with body:
+  {
+    "totalProposals": {{ $json["Total Proposals"] }},
+    "totalPipeline":  {{ $json["Total Pipeline"] }},
+    ...
+  }
+  Then your server sets window.DASHBOARD_DATA before this script runs.
+
+  Or use the ?data= param approach: encode the full JSON and append to URL.
+*/
+</script>
+</body>
+</html>
